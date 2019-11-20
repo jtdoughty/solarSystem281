@@ -33,8 +33,7 @@ class Particle:
         #    self.update = self.crect
         else:
             raise ValueError(
-                "Unrecognised integration method. Method must be 1 "
-                "(trapezoid), 2 (left rectangle), or 3 (centre rectangle)."
+                "Unrecognised integration method. Method must be 1 \n(trapezoid), 2 (left rectangle), or 3 (centre rectangle)."
             )
 
     def euler(self, deltaT):
