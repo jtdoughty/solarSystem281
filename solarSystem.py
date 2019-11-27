@@ -2,49 +2,68 @@ import math
 from Particle import Particle
 import matplotlib.pyplot as plt
 import numpy as np
+from copy import deepcopy
+import matplotlib
+from mpl_toolkits import mplot3d
+from Planets import planetList
+
+#https://ssd.jpl.nasa.gov/horizons.cgi#results
 
 earthMass = 5.97237e24   # https://en.wikipedia.org/wiki/Earth
 earthRadius = 63710*1e3  # https://en.wikipedia.org/wiki/Earth
-Earth = Particle(np.array([0,0,0]), np.array([0,0,0]), np.array([0,0,0]),'Earth', earthMass)
+Earth = Particle(np.array([0,0,0]), np.array([0,10,0]), np.array([0,0,0]),'Earth', earthMass)
 satPosition = earthRadius+(35786*1e3)
 satVelocity = math.sqrt(Earth.G*Earth.mass/(satPosition))
-Satellite = Particle([satPosition,0,0], [0,satVelocity,0], np.array([0,0,0]), "Satellite", 7.34e12)
+Satellite = Particle([satPosition,0,0], [0,satVelocity,0], np.array([0,0,0]), "Satellite", 50000000000.)
+Steve = Particle([-1*satPosition,0,0], [0,-1*satVelocity,0], np.array([0,0,0]), "Steve", 50000000000.)
+Hello = Particle([2*satPosition,0,0], [0,-0.7*satVelocity,0], np.array([0,0,0]), "Hello", 25000000000.)
 
-class SolarSystem:
+listOfBodies=[Steve,Satellite,Earth,Hello]
+
+planetset = planetList('planetData.csv')
+listOfPlanets = planetset.makeList()
+
+class GroupOfParticles:
     """
     Simulates a 2 body system
     """
-    def __init__(self,toast=1):
-        #huh?
-        self.toast=toast
-    
-    def __repr__(self):
-        #where am i?
-        return "Something{}".format(self.toast)
+    def __init__(self, Delta, BodyList, Iterations):
+        self.delta = Delta
+        self.bodyList = BodyList
+        self.iterations = Iterations
 
-    earthx=[]
-    earthy=[]
-    satx=[]
-    saty=[]
+    def getAccels(self):
+        separationVec = np.array([0,0,0], dtype=float)
+        separationMag = 0
+        for subjectBody in self.bodyList:            
+            subjectBody.acceleration=np.array([0,0,0], dtype=float)
+            for objectBody in self.bodyList:
+                if(objectBody != subjectBody):
+                    separationVec = objectBody.position - subjectBody.position
+                    separationMag = np.linalg.norm(separationVec)
+                    subjectBody.acceleration += ((Particle.G * objectBody.mass)/(separationMag**3)) * separationVec
 
-    delta = 6
-    separationVec = np.array([0,0,0], dtype=float)
-    separationMag = 0
-    force = 0
-    for i in range(200000):
-        separationVec = Earth.position - Satellite.position
-        separationMag = math.sqrt(separationVec[0]**2 + separationVec[1]**2 + separationVec[2]**2)
-        force = (Particle.G * Satellite.mass * Earth.mass)/(separationMag**2)
-        Earth.acceleration = ((-1 * force)/(separationMag * Earth.mass)) * separationVec
-        Satellite.acceleration = ((force)/(separationMag * Satellite.mass)) * separationVec
-        Earth.update(delta)
-        Satellite.update(delta)
-        #print('Time:',i,', Earth vel:',Earth.velocity,', Earth pos:',Earth.position)
-        earthx.append(Earth.position[0])
-        earthy.append(Earth.position[1])
-        satx.append(Satellite.position[0])
-        saty.append(Satellite.position[1])
-    plt.plot(earthx,earthy,label='Earth')
-    plt.plot(satx,saty,label='Sat')
-    plt.legend()
-    plt.show()
+    def groupUpdate(self):
+        self.getAccels()
+        for subjectBody in self.bodyList:
+            subjectBody.update(self.delta)
+            subjectBody.posx.append(subjectBody.position[0])#
+            subjectBody.posy.append(subjectBody.position[1])#'''
+            subjectBody.posz.append(subjectBody.position[2])#
+
+    def groupUpdateIterative(self,numberOfIts):
+        for i in range(numberOfIts):
+            self.groupUpdate()
+            
+    def plotGraph(self):
+        self.groupUpdateIterative(self.iterations)
+        ax = plt.axes(projection='3d')
+        for body in self.bodyList:
+            ax.plot3D(body.posx,body.posy,body.posz,':')
+            ax.scatter3D(body.posx[-1],body.posy[-1],body.posz[-1],label=body.Name)
+            #plt.plot(body.posx,body.posy,body.posz,label=body.Name)#'''
+        plt.legend()
+        plt.show()
+
+SolarSystem = GroupOfParticles(6000,listOfPlanets,20000)
+SolarSystem.plotGraph()
