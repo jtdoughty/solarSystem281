@@ -5,24 +5,32 @@ class Particle:
     Class defining a massive particle with initial conditions, with an associated position and velocity updater.
     -------------------------------------
     Parameters:
-    > Position: Initial position in space, as float array [x,y,z] (default [0,0,0] at origin)
-    > Velocity: Initial velocity, as float array [x,y,z] (default [0,0,0] immobile)
-    > Acceleration: Initial acceleration, as float array [x,y,z] (default [0,-10,0] earth gravity)
-    > Name: Name label of particle (default 'Ball')
-    > Mass: Mass of particle (default 1.0) (unused)
+    > Position: Initial position in space, as float array [x,y,z] (default [0,0,0] at origin)\n
+    > Velocity: Initial velocity, as float array [x,y,z] (default [0,0,0] immobile)\n
+    > Acceleration: Initial acceleration, as float array [x,y,z] (default [0,0,0] not accelerating)\n
+    > Name: Name label of particle (default 'Ball')\n
+    > Mass: Mass of particle (default 1.0) (unused)\n
+    -------------------------------------
+    Methods:
+    > setMethod(method): Changes the update method\n
+    > setName(name): Changes the name\n
+    > setPosition(position): Changes the position
     """
-    def __init__(self, Position=np.array([0,0,0], dtype=float), Velocity=np.array([0,0,0], dtype=float), Acceleration=np.array([0,-10,0], dtype=float), name='Ball', Mass=1.0, method=1):
+    def __init__(self, Position=np.array([0,0,0], dtype=float), Velocity=np.array([0,0,0], dtype=float), Acceleration=np.array([0,0,0], dtype=float), name='Ball', Mass=1.0):
         self.position=np.array(Position, dtype=float)
         self.velocity=np.array(Velocity, dtype=float)
         self.acceleration=np.array(Acceleration, dtype=float)
-        self.name=str(name)
+        self.Name=str(name)
         self.mass=float(Mass)
-        self.setMethod(method)
+        self.setMethod(2)
+        self.posx=[]
+        self.posy=[]
+        self.posz=[]
 
     G=6.67408E-11
 
     def __repr__(self):
-        return 'Particle: {0}, Mass: {1:12.3e}, Position: {2}, Velocity: {3}, Acceleration: {4}'.format(self.name,self.mass,self.position, self.velocity,self.acceleration)
+        return 'Particle: {0}, Mass: {1:12.3e}, Position: {2}, Velocity: {3}, Acceleration: {4}'.format(self.Name,self.mass,self.position, self.velocity,self.acceleration)
 
     def setMethod(self, method):
         if method == 1:
@@ -33,8 +41,14 @@ class Particle:
         #    self.update = self.crect
         else:
             raise ValueError(
-                "Unrecognised integration method. Method must be 1 \n(trapezoid), 2 (left rectangle), or 3 (centre rectangle)."
+                "Unrecognised integration method. Method must be 1 \n(Euler) or 2 (Euler-Cromer)."
             )
+    
+    def setPosition(self, Position):
+        self.position = np.array(Position, dtype=float)
+
+    def setName(self,Name):
+        self.Name = str(Name)
 
     def euler(self, deltaT):
         """
@@ -55,3 +69,7 @@ class Particle:
         """
         self.velocity += self.acceleration*deltaT
         self.position += self.velocity*deltaT
+
+    def KineticEnergy(self):
+        return(0.5 * self.mass * np.dot(self.velocity,self.velocity))
+
