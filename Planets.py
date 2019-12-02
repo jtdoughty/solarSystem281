@@ -34,6 +34,3 @@ class planetList:
             newPlanet = Particle(newPos,newVel,[0,0,0],newName,newMass)
             listOfPlanets.append(newPlanet)
         return listOfPlanets
-
-list1 = planetList('planetData.csv')
-print(list1.makeList())
