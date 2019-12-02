@@ -9,20 +9,6 @@ from Planets import planetList
 
 #https://ssd.jpl.nasa.gov/horizons.cgi#results
 
-earthMass = 5.97237e24   # https://en.wikipedia.org/wiki/Earth
-earthRadius = 63710*1e3  # https://en.wikipedia.org/wiki/Earth
-Earth = Particle(np.array([0,0,0]), np.array([0,10,0]), np.array([0,0,0]),'Earth', earthMass)
-satPosition = earthRadius+(35786*1e3)
-satVelocity = math.sqrt(Earth.G*Earth.mass/(satPosition))
-Satellite = Particle([satPosition,0,0], [0,satVelocity,0], np.array([0,0,0]), "Satellite", 50000000000.)
-Steve = Particle([-1*satPosition,0,0], [0,-1*satVelocity,0], np.array([0,0,0]), "Steve", 50000000000.)
-Hello = Particle([2*satPosition,0,0], [0,-0.7*satVelocity,0], np.array([0,0,0]), "Hello", 25000000000.)
-
-listOfBodies=[Steve,Satellite,Earth,Hello]
-
-planetset = planetList('planetData.csv')
-listOfPlanets = planetset.makeList()
-
 class GroupOfParticles:
     """
     Simulates a 2 body system
@@ -64,6 +50,3 @@ class GroupOfParticles:
             #plt.plot(body.posx,body.posy,body.posz,label=body.Name)#'''
         plt.legend()
         plt.show()
-
-SolarSystem = GroupOfParticles(6000,listOfPlanets,20000)
-SolarSystem.plotGraph()
