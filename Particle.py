@@ -72,4 +72,12 @@ class Particle:
 
     def KineticEnergy(self):
         return(0.5 * self.mass * np.dot(self.velocity,self.velocity))
+    
+    def LinMomentum(self):
+        return(self.mass * self.velocity)
+
+    def AngMomentum(self):
+        linMomentum = self.LinMomentum()
+        return(np.cross(self.position, linMomentum))
+
 
