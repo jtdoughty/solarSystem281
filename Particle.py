@@ -9,7 +9,7 @@ class Particle:
     > Velocity: Initial velocity, as float array [x,y,z] (default [0,0,0] immobile)\n
     > Acceleration: Initial acceleration, as float array [x,y,z] (default [0,0,0] not accelerating)\n
     > Name: Name label of particle (default 'Ball')\n
-    > Mass: Mass of particle (default 1.0) (unused)\n
+    > Mass: Mass of particle (default 1.0)\n
     -------------------------------------
     Methods:
     > setMethod(method): Changes the update method\n
@@ -23,11 +23,16 @@ class Particle:
         self.Name=str(name)
         self.mass=float(Mass)
         self.setMethod(2)
-        self.posx=[]
+        self.posx=[]#these three lists are use to store the position data at a given time step
         self.posy=[]
         self.posz=[]
+        self.kinEnergyList=[]#these four lists store the kinetic energy, potential energy, linear momentum, and angular momentum at a given time step
+        self.potEnergyList=[]
+        self.linMomList=[]
+        self.angMomList=[]
 
-    G=6.67408E-11
+    G=6.67408E-20#in km^3.kg^-1.s^-2
+    timeList=[]#this is a global list of the time steps, and is the same length as the other seven lists for each particle
 
     def __repr__(self):
         return 'Particle: {0}, Mass: {1:12.3e}, Position: {2}, Velocity: {3}, Acceleration: {4}'.format(self.Name,self.mass,self.position, self.velocity,self.acceleration)
