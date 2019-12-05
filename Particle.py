@@ -73,6 +73,9 @@ class Particle:
     def KineticEnergy(self):
         return(0.5 * self.mass * np.dot(self.velocity,self.velocity))
     
+    def potentialEnergy(self,obmass,separation):
+        return((self.G*self.mass*obmass)/(separation**2))
+    
     def LinMomentum(self):
         return(self.mass * self.velocity)
 
