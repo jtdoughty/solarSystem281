@@ -11,7 +11,13 @@ from Planets import planetList
 
 class GroupOfParticles:
     """
-    Simulates a 2 body system
+    Class for taking a list of particles (from the planetList class) and producing an n-body system in which the bodies interact.
+    -------------------------------------
+    Parameters:
+    > Delta: Size of one time step, as float\n
+    > Bodylist: A list of particles, as list (see planetList)\n
+    > Iterations: The number of timesteps to be used, as int\n
+    Note: All of these are to be supplied in the runSimulation.py file from the initialise.csv file
     """
     def __init__(self, Delta, BodyList, Iterations):
         self.delta = Delta
@@ -57,7 +63,7 @@ class GroupOfParticles:
         #ax.set_aspect('equal')
         for body in self.bodyList:
             ax.plot3D(body.posx,body.posy,body.posz,':')
-            ax.scatter3D(body.posx[-1],body.posy[-1],body.posz[-1],label=body.Name)
+            ax.scatter3D(body.posx[-1],body.posy[-1],body.posz[-1],label=body.Name)#marks the end of the line with a dot, for ease of presentation
         plt.legend()
         plt.show()
 
