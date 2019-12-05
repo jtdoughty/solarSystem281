@@ -21,6 +21,7 @@ class GroupOfParticles:
     def getAccels(self):
         separationVec = np.array([0,0,0], dtype=float)
         separationMag = 0
+        potEnergy = 0
         for subjectBody in self.bodyList:            
             subjectBody.acceleration=np.array([0,0,0], dtype=float)
             for objectBody in self.bodyList:
@@ -28,6 +29,12 @@ class GroupOfParticles:
                     separationVec = objectBody.position - subjectBody.position
                     separationMag = np.linalg.norm(separationVec)
                     subjectBody.acceleration += ((Particle.G * objectBody.mass)/(separationMag**3)) * separationVec
+                    potEnergy += subjectBody.potentialEnergy(objectBody.mass,separationMag)
+            subjectBody.potEnergyList.append(potEnergy)
+            potEnergy = 0
+            subjectBody.kinEnergyList.append(subjectBody.KineticEnergy())
+            subjectBody.linMomList.append(subjectBody.LinMomentum())
+            subjectBody.angMomList.append(subjectBody.AngMomentum())
 
     def groupUpdate(self):
         self.getAccels()
@@ -38,15 +45,55 @@ class GroupOfParticles:
             subjectBody.posz.append(subjectBody.position[2])#
 
     def groupUpdateIterative(self,numberOfIts):
+        time = 0
         for i in range(numberOfIts):
             self.groupUpdate()
+            Particle().timeList.append(time)
+            time += self.delta
             
-    def plotGraph(self):
+    def plot3dGraph(self):
         self.groupUpdateIterative(self.iterations)
         ax = plt.axes(projection='3d')
+        #ax.set_aspect('equal')
         for body in self.bodyList:
             ax.plot3D(body.posx,body.posy,body.posz,':')
             ax.scatter3D(body.posx[-1],body.posy[-1],body.posz[-1],label=body.Name)
-            #plt.plot(body.posx,body.posy,body.posz,label=body.Name)#'''
+        plt.legend()
+        plt.show()
+
+    def plotXY(self):
+        self.groupUpdateIterative(self.iterations)
+        for body in self.bodyList:
+            plt.plot(body.posx,body.posy,':')
+            plt.scatter(body.posx[-1],body.posy[-1],label=body.Name)
+        plt.legend()
+        plt.show()
+
+    def plotXZ(self):
+        self.groupUpdateIterative(self.iterations)
+        for body in self.bodyList:
+            plt.plot(body.posx,body.posz,':')
+            plt.scatter(body.posx[-1],body.posz[-1],label=body.Name)
+        plt.legend()
+        plt.show()
+    
+    def plotYZ(self):
+        self.groupUpdateIterative(self.iterations)
+        for body in self.bodyList:
+            plt.plot(body.posy,body.posz,':')
+            plt.scatter(body.posy[-1],body.posz[-1],label=body.Name)
+        plt.legend()
+        plt.show()
+
+    def plotEnergies(self):
+        self.groupUpdateIterative(self.iterations)
+        totalKin = [0]*len(self.bodyList[0].kinEnergyList)
+        totalPot = [0]*len(self.bodyList[0].potEnergyList)
+        for body in self.bodyList:
+            for i in range(len(totalKin)):
+                totalKin[i] += body.kinEnergyList[i]
+                totalPot[i] += body.potEnergyList[i]
+        plt.plot(Particle().timeList,totalKin,label='Kinetic')
+        #plt.plot(Particle().timeList,totalPot,label='Potential')
         plt.legend()
         plt.show()
