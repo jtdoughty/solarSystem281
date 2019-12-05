@@ -2,6 +2,12 @@ import numpy as np
 from Particle import Particle
 
 class planetList:
+    """
+    Creates a set of 'planets' using the Particle class, using the data in the relevant .csv file (as named in the initialise.csv file)
+    ------------------------------------
+    Parameters:
+    > FileName: Name of the data file to be loaded, as string.  The data in the file should be formatted with each row referring to one planet, and each column referring to that planet's name, mass (kg), initial x position, initial y position, initial z position (all in km), initial x velocity, initial y velocity, and initial z velocity (all in km.s^-1), respectively.
+    """
     def __init__(self, FileName):
         self.filename=str(FileName)
 
