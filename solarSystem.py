@@ -25,17 +25,20 @@ class GroupOfParticles:
         self.iterations = Iterations
 
     def getAccels(self):
-        separationVec = np.array([0,0,0], dtype=float)
-        separationMag = 0
-        potEnergy = 0
-        for subjectBody in self.bodyList:            
-            subjectBody.acceleration=np.array([0,0,0], dtype=float)
-            for objectBody in self.bodyList:
-                if(objectBody != subjectBody):
+        """
+        Calculates the acceleration experienced by each particle, due to each other particle present in the system.
+        """
+        separationVec = np.array([0,0,0], dtype=float)#Used to represent the vector separation of the two planets concerned in the system.  This points towards the second body, since this is used to calculate an acceleration under a presumed attractive force on the first body
+        separationMag = 0#Used to represent the magnitude of the separation vector, separationVec
+        potEnergy = 0#Used to represent the potential energy from the force attracting a given mass to the others
+        for subjectBody in self.bodyList:#subjectBody represents the body being attracted
+            subjectBody.accZero()
+            for objectBody in self.bodyList:#objectBody represents the body doing the attracting
+                if(objectBody != subjectBody):#Since a body can't attract itself!
                     separationVec = objectBody.position - subjectBody.position
                     separationMag = np.linalg.norm(separationVec)
-                    subjectBody.acceleration += ((Particle.G * objectBody.mass)/(separationMag**3)) * separationVec
-                    potEnergy += subjectBody.potentialEnergy(objectBody.mass,separationMag)
+                    subjectBody.accIncr(((Particle.G * objectBody.mass)/(separationMag**3)) * separationVec)
+                    potEnergy += subjectBody.potentialEnergy(objectBody.mass,separationMag)/2
             subjectBody.potEnergyList.append(potEnergy)
             potEnergy = 0
             subjectBody.kinEnergyList.append(subjectBody.KineticEnergy())
@@ -43,32 +46,48 @@ class GroupOfParticles:
             subjectBody.angMomList.append(subjectBody.AngMomentum())
 
     def groupUpdate(self):
+        """
+        Updates the positions of the bodies of the systems, by calling the update method of the Particle class
+        """
         self.getAccels()
         for subjectBody in self.bodyList:
             subjectBody.update(self.delta)
-            subjectBody.posx.append(subjectBody.position[0])#
-            subjectBody.posy.append(subjectBody.position[1])#'''
-            subjectBody.posz.append(subjectBody.position[2])#
+            subjectBody.posx.append(subjectBody.position[0])#Appends the position components to a list stored in the Particle class
+            subjectBody.posy.append(subjectBody.position[1])
+            subjectBody.posz.append(subjectBody.position[2])
 
-    def groupUpdateIterative(self,numberOfIts):
+    def groupUpdateIterative(self):
+        """
+        Calls the groupUpdate method repeatedly across the number of iterations given in the initialise.csv file
+        """
         time = 0
-        for i in range(numberOfIts):
+        for i in range(self.iterations):
             self.groupUpdate()
-            Particle().timeList.append(time)
+            Particle().timeList.append(time)#This will create a list of time points, which will be as long as the lists of kinetic energies and momenta
             time += self.delta
             
     def plot3dGraph(self):
-        self.groupUpdateIterative(self.iterations)
+        """
+        Creates a 3-dimensional plot of the positions of all planets in this system.
+        """
+        #self.groupUpdateIterative(self.iterations)
         ax = plt.axes(projection='3d')
-        #ax.set_aspect('equal')
+        maxList=[]#Lists the largest values (in terms of magnitude) from the x, y and z components from each planet
         for body in self.bodyList:
             ax.plot3D(body.posx,body.posy,body.posz,':')
             ax.scatter3D(body.posx[-1],body.posy[-1],body.posz[-1],label=body.Name)#marks the end of the line with a dot, for ease of presentation
+            maxList.append(max(np.absolute(body.posx)))
+            maxList.append(max(np.absolute(body.posy)))
+            maxList.append(max(np.absolute(body.posz)))
+        maxValue=max(maxList)#Finds the largest magnitude value from all position points of all planets used, to better scale the axes
         plt.legend()
+        ax.set_xlim3d(-maxValue,maxValue)#Set the axes to the same limits, determined using maxValue
+        ax.set_ylim3d(-maxValue,maxValue)
+        ax.set_zlim3d(-maxValue,maxValue)
         plt.show()
 
     def plotXY(self):
-        self.groupUpdateIterative(self.iterations)
+        #self.groupUpdateIterative(self.iterations)
         for body in self.bodyList:
             plt.plot(body.posx,body.posy,':')
             plt.scatter(body.posx[-1],body.posy[-1],label=body.Name)
@@ -76,7 +95,7 @@ class GroupOfParticles:
         plt.show()
 
     def plotXZ(self):
-        self.groupUpdateIterative(self.iterations)
+        #self.groupUpdateIterative(self.iterations)
         for body in self.bodyList:
             plt.plot(body.posx,body.posz,':')
             plt.scatter(body.posx[-1],body.posz[-1],label=body.Name)
@@ -84,7 +103,7 @@ class GroupOfParticles:
         plt.show()
     
     def plotYZ(self):
-        self.groupUpdateIterative(self.iterations)
+        #self.groupUpdateIterative(self.iterations)
         for body in self.bodyList:
             plt.plot(body.posy,body.posz,':')
             plt.scatter(body.posy[-1],body.posz[-1],label=body.Name)
@@ -92,7 +111,6 @@ class GroupOfParticles:
         plt.show()
 
     def plotEnergies(self):
-        self.groupUpdateIterative(self.iterations)
         totalKin = [0]*len(self.bodyList[0].kinEnergyList)
         totalPot = [0]*len(self.bodyList[0].potEnergyList)
         for body in self.bodyList:
@@ -100,6 +118,53 @@ class GroupOfParticles:
                 totalKin[i] += body.kinEnergyList[i]
                 totalPot[i] += body.potEnergyList[i]
         plt.plot(Particle().timeList,totalKin,label='Kinetic')
-        #plt.plot(Particle().timeList,totalPot,label='Potential')
+        plt.plot(Particle().timeList,totalPot,label='Potential')
+        plt.legend()
+        plt.show()
+
+    def plotVirial(self):
+        listVirial = [0]*len(self.bodyList[0].kinEnergyList)
+        for body in self.bodyList:
+            for i in range(len(self.bodyList[0].kinEnergyList)):
+                listVirial[i] += (2*body.kinEnergyList[i]-body.potEnergyList[i])
+        plt.plot(Particle().timeList,listVirial,label='$2K-U$')
+        plt.legend()
+        plt.show()
+
+    def plotLinMomentum(self):
+        #self.groupUpdateIterative(self.iterations)
+        totalLMom=[0]*len(self.bodyList[0].linMomList)
+        totalLMomX=deepcopy(totalLMom)
+        totalLMomY=deepcopy(totalLMom)
+        totalLMomZ=deepcopy(totalLMom)
+        for body in self.bodyList:
+            for i in range(len(body.linMomList)):
+                totalLMom[i]+=np.linalg.norm(body.linMomList[i])
+                totalLMomX[i]+=body.linMomList[i][0]
+                totalLMomY[i]+=body.linMomList[i][1]
+                totalLMomZ[i]+=body.linMomList[i][2]
+        plt.plot(Particle().timeList,totalLMom,label='Total Linear Momentum')
+        plt.plot(Particle().timeList,totalLMomX,label='Total Linear Momentum in x')
+        plt.plot(Particle().timeList,totalLMomY,label='Total Linear Momentum in y')
+        plt.plot(Particle().timeList,totalLMomZ,label='Total Linear Momentum in z')
+        plt.legend()
+        plt.show()
+
+    def plotAngMomentum(self):
+        #self.groupUpdateIterative(self.iterations)
+        totalAMom=[0]*len(self.bodyList[0].angMomList)
+        totalAMomX=deepcopy(totalAMom)
+        totalAMomY=deepcopy(totalAMom)
+        totalAMomZ=deepcopy(totalAMom)
+        for body in self.bodyList:
+            for i in range(len(body.angMomList)):
+                totalAMom[i]+=np.linalg.norm(body.angMomList[i])
+                totalAMomX[i]+=body.angMomList[i][0]
+                totalAMomY[i]+=body.angMomList[i][1]
+                totalAMomZ[i]+=body.angMomList[i][2]
+        plt.plot(Particle().timeList,totalAMom,label='Total Angular Momentum')
+        plt.plot(Particle().timeList,totalAMomX,label='Total Angular Momentum in x')
+        plt.plot(Particle().timeList,totalAMomY,label='Total Angular Momentum in y')
+        plt.plot(Particle().timeList,totalAMomZ,label='Total Angular Momentum in z')
         plt.legend()
         plt.show()
