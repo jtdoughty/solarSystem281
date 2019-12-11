@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 
 class Particle:
     """
@@ -30,6 +31,7 @@ class Particle:
         self.potEnergyList=[]
         self.linMomList=[]
         self.angMomList=[]
+        self.oldAcc=deepcopy(self.acceleration)
 
     G=6.67408E-20#in km^3.kg^-1.s^-2
     timeList=[]#this is a global list of the time steps, and is the same length as the other seven lists for each particle
@@ -42,18 +44,23 @@ class Particle:
             self.update = self.euler
         elif method == 2:
             self.update = self.eulerCromer
-        #elif method == 3:
-        #    self.update = self.crect
+        elif method == 3:
+            self.update = self.verlet
         else:
-            raise ValueError(
-                "Unrecognised integration method. Method must be 1 \n(Euler) or 2 (Euler-Cromer)."
-            )
+            raise ValueError("Unrecognised integration method. Method must be 1 (Euler), 2 (Euler-Cromer) or 3 (Verlet).")
     
     def setPosition(self, Position):
         self.position = np.array(Position, dtype=float)
 
     def setName(self,Name):
         self.Name = str(Name)
+
+    def accZero(self):
+        self.oldAcc=deepcopy(self.acceleration)
+        self.acceleration=np.array([0,0,0],dtype=float)
+
+    def accIncr(self,add):
+        self.acceleration += add
 
     def euler(self, deltaT):
         """
@@ -75,11 +82,21 @@ class Particle:
         self.velocity += self.acceleration*deltaT
         self.position += self.velocity*deltaT
 
+    def verlet(self, deltaT):
+        """
+        Updates position and velocity over a time increment, using a centre-step approximation of acceleration.
+        --------------------------------
+        Parameters:
+        > deltaT: Time increment (no default)
+        """
+        self.position += (self.velocity*deltaT + 0.5*self.oldAcc*deltaT**2)
+        self.velocity += 0.5*(deltaT**2)*(self.acceleration+self.oldAcc)
+
     def KineticEnergy(self):
         return(0.5 * self.mass * np.dot(self.velocity,self.velocity))
     
     def potentialEnergy(self,obmass,separation):
-        return((self.G*self.mass*obmass)/(separation**2))
+        return((self.G*self.mass*obmass)/(separation))
     
     def LinMomentum(self):
         return(self.mass * self.velocity)
